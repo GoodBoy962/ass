@@ -260,4 +260,4 @@ function remove(req, res){
 
 
 
-module.exports = { read, create, update, remove };
+module.exports = { read, create, remove };
