@@ -11,7 +11,7 @@ const auth = require('./routes/auth');
 const swaggerJsDoc = SwaggerJSDoc({
   swaggerDefinition: {
     info: {
-      title: pkg.name,
+      title: pkg.name.toUpperCase(),
       version: pkg.version,
       description: pkg.description,
     },
