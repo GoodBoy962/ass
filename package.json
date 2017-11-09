@@ -1,0 +1,32 @@
+{
+  "name": "ass",
+  "version": "0.0.1",
+  "description": "Aliases storage service - aliases for addresses from crypto network",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "nodemon --exec 'npm run lint && npm run dev'",
+    "dev": "node ./bin/www.js",
+    "lint": "eslint app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/n0cte/ass.git"
+  },
+  "author": "n0cte <ilnur.a.g@gmail.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/n0cte/ass/issues"
+  },
+  "homepage": "https://github.com/n0cte/ass#readme",
+  "dependencies": {
+    "express": "^4.16.2",
+    "leveldown": "^2.0.0",
+    "levelup": "^2.0.0",
+    "log4js": "^2.3.11",
+    "swagger-jsdoc": "^1.9.7",
+    "swagger-tools": "^0.10.3"
+  },
+  "devDependencies": {
+    "eslint": "^4.10.0"
+  }
+}
