@@ -4,7 +4,6 @@ const kad = require('kad');
 const levelup = require('levelup');
 const leveldown = require('leveldown');
 const sha1 = require('js-sha1');
-const plugin = require('./plugin');
 
 const transport = new kad.HTTPTransport();
 const identity = kad.utils.getRandomKeyString();
@@ -57,14 +56,10 @@ node.use('STORE', (request, response, next) => {
   //create new
   storage.get(key)
     .then(
-      acc => {
-        console.log('already exists', acc.toString('utf8'));
-        return next(new AlreadyExistError());
-      },
+      () => next(new AlreadyExistError()),
       err => {
         let account = {};
         account[network] = address;
-        console.log(account);
         storage.put(key, JSON.stringify(account))
           .then(() => {
             storage.get(key).then(
@@ -83,7 +78,7 @@ node.use('ECHO', (request, response, next) => {
 });
 
 node.use((err, request, response, next) => {
-  console.log('ERROR___ ', err);
+  console.log(err);
   response.send({ error: err.message });
 });
 

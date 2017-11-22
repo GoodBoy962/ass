@@ -47,10 +47,7 @@ node.use('STORE', (request, response, next) => {
   //create new
   storage.get(key)
     .then(
-      () => {
-        console.log('already exists');
-        return next(new AlreadyExistError());
-      },
+      () => next(new AlreadyExistError()),
       err => {
         let account = {};
         account[network] = address;
@@ -79,10 +76,8 @@ node.use('ECHO', (request, response, next) => {
   response.send(request.params);
 });
 
-// Define a global custom error handler rule, simply by including the `err`
-// argument in the handler
 node.use((err, request, response, next) => {
-  console.log('ERROR: ', err);
+  console.log(err);
   response.send({ error: err.message });
 });
 
