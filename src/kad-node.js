@@ -3,7 +3,8 @@
 const kad = require('kad');
 const levelup = require('levelup');
 const leveldown = require('leveldown');
-const sha1 = require('js-sha1');
+// const sha1 = require('js-sha1');
+const crypto = require('crypto');
 
 const transport = new kad.HTTPTransport();
 const identity = kad.utils.getRandomKeyString();
@@ -11,9 +12,9 @@ const identity = kad.utils.getRandomKeyString();
 const DB_PATH = `.localdb/.ass-${identity}`;
 const storage = levelup(leveldown(DB_PATH));
 
-const {
-  AlreadyExistError
-} = require('./models/Error');
+const { AlreadyExistError } = require('./models/Error');
+const { Seed } = require('./models/Seed');
+const logger = require('./config/logger')(`first node-[${identity}]`);
 
 const PORT = process.argv[2];
 const contact = {
@@ -28,30 +29,17 @@ const node = kad({
   identity: identity
 });
 
-const seed = [
-  'd37db5836b773a39323d7b75b057477674717b66',
-  { hostname: '10.129.57.195', port: 8080 }
-];
-
-console.log(`Node with identity: ${identity}`);
-
-node.use((request, response, next) => {
-  let [identityString] = request.contact;
-  console.log('MESSAGE from: ', identityString);
+node.use((req, res, next) => {
+  let [identityString] = req.contact;
+  logger.log(`MESSAGE from: ${identity}`);
   next();
 });
 
-node.use('STORE', (request, response, next) => {
-
-  console.log('***STORE message...***');
-
-  let [key, val] = request.params;
-
-  console.log(key);
-
+node.use('STORE', (req, res, next) => {
+  let [key, val] = req.params;
   const [alias, network, address] = val.value.split(':');
 
-  console.log(`Incoming: alias ${alias} for network: ${network} with address: ${address}`);
+  logger.log(`Incoming: alias ${alias} for network: ${network} with address: ${address}`);
 
   //create new
   storage.get(key)
@@ -64,7 +52,7 @@ node.use('STORE', (request, response, next) => {
           .then(() => {
             storage.get(key).then(
               acc => {
-                console.log('....successfully put new values: ', acc.toString('utf8'))
+                logger.log(`....successfully put new values: ${account.toString('utf8')}`)
               });
             next();
           });
@@ -72,31 +60,36 @@ node.use('STORE', (request, response, next) => {
     );
 });
 
-node.use('ECHO', (request, response, next) => {
-  console.log('***ECHO message...***');
-  response.send(request.params);
+node.use('ECHO', (req, res, next) => {
+  logger.log('***ECHO message...***');
+  res.send(req.params);
 });
 
-node.use((err, request, response, next) => {
-  console.log(err);
-  response.send({ error: err.message });
+node.use((err, req, res, next) => {
+  logger.warn(err);
+  res.send({ error: err.message });
 });
 
 node.listen(PORT);
 
+const seed = Seed.getBase();
 node.join(seed, () => {
-  console.log(`Connected to ${node.router.size} peers!`);
+
+  logger.log(`Connected to ${node.router.size} peers!`);
+
+  const hash = crypto.createHash('sha1').update('satoshi').digest('hex');
+  const alias_network_address = 'satoshi:ethereum:0x1Fed25AA5311d770F29E22870CDb9e715052FeA7';
 
   // store new value
-  node.iterativeStore(sha1('satoshi'), 'satoshi:ethereum:0x1Fed25AA5311d770F29E22870CDb9e715052FeA7', (err, res) => {
-    console.log('SOME RES: ', res);
+  node.iterativeStore(hash, alias_network_address, (err, res) => {
+    logger.log('SOME RES: ', res);
     if (err) {
-      console.log('ERROR', err);
+      logger.error(err);
     }
   })
 
   //check if value exist
-  // node.iterativeFindValue(sha1('satoshi'), (err, res) => {
+  // node.iterativeFindValue(hash.update('satoshi'), (err, res) => {
   //   console.log(err);
   //   console.log(Buffer.from(res.data).toString());
   // });

@@ -10,9 +10,8 @@ const identity = 'd37db5836b773a39323d7b75b057477674717b66';
 const DB_PATH = `.localdb/.ass-${identity}`;
 const storage = levelup(leveldown(DB_PATH));
 
-const {
-    AlreadyExistError
-} = require('./models/Error');
+const { AlreadyExistError } = require('./models/Error');
+const logger = require('./config/logger')('base-node');
 
 const PORT = process.argv[2];
 
@@ -28,21 +27,17 @@ const node = kad({
   identity: identity
 });
 
-node.use((request, response, next) => {
-  let [identityString] = request.contact;
-  console.log('MESSAGE from: ', identityString);
+node.use((req, res, next) => {
+  let [identity] = req.contact;
+  logger.log(`MESSAGE from: ${identity}`);
   next();
 });
 
-node.use('STORE', (request, response, next) => {
-
-  console.log('***STORE message...***');
-
-  let [key, val] = request.params;
-
+node.use('STORE', (req, res, next) => {
+  let [key, val] = req.params;
   const [alias, network, address] = val.value.split(':');
 
-  console.log(`Incoming: alias ${alias} for network: ${network} with address: ${address}`);
+  logger.log(`Incoming: alias ${alias} for network: ${network} with address: ${address}`);
 
   //create new
   storage.get(key)
@@ -55,7 +50,7 @@ node.use('STORE', (request, response, next) => {
           .then(() => {
             storage.get(key).then(
               account => {
-                console.log('....successfully put new values: ', account.toString('utf8'))
+                logger.log(`....successfully put new values: ${account.toString('utf8')}`)
               });
             next();
           })
@@ -63,24 +58,16 @@ node.use('STORE', (request, response, next) => {
     );
 });
 
-node.use('ECHO', (request, response, next) => {
-  console.log('***ECHO message...***');
-  if ([/* some naughty words */].includes(request.params.message)) {
-    return next(new Error(
-      `Oh goodness, I dare not say "${request.params.message}"`
-    ));
-  }
-
-  console.log('***END***');
-
-  response.send(request.params);
+node.use('ECHO', (req, res, next) => {
+  logger.log('***ECHO message...***');
+  res.send(req.params);
 });
 
-node.use((err, request, response, next) => {
-  console.log(err);
-  response.send({ error: err.message });
+node.use((err, req, res, next) => {
+  logger.warn(err);
+  res.send({ error: err.message });
 });
 
 node.listen(PORT);
 
-console.log(`Node with identity: ${identity}`);
+logger.log(`Node with identity: ${identity}`);

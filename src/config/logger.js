@@ -16,4 +16,4 @@ log4js.configure({
 
 module.exports = function logger(namespace = 'default'){
   return log4js.getLogger(namespace);
-}
+};

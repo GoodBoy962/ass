@@ -59,6 +59,6 @@ typings/
 
 #Intelij
 .idea
-#Localdb
+#LocalDB
 .localdb/.ass*
 

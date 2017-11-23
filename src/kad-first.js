@@ -24,16 +24,12 @@ const node = kad({
   identity: identity
 });
 
-//kad-base node properties
-const seed = [
-  'd37db5836b773a39323d7b75b057477674717b66',
-  {hostname: '10.129.57.195', port: 8080}
-];
-
-console.log(`Node with identity: ${identity}`);
+const { Seed } = require('./models/Seed');
+const logger = require('./config/logger')(`first node-[${identity}]`);
 
 node.listen(PORT);
 
+const seed = Seed.getBase();
 node.join(seed, () => {
   console.log(`Connected to ${node.router.size} peers!`);
 });

@@ -8,6 +8,8 @@ const leveldown = require('leveldown');
 const transport = new kad.HTTPTransport();
 const identity = kad.utils.getRandomKeyString();
 
+const logger = require('./config/logger')(`node-[${identity}]`);
+
 const DB_PATH = `../.ass-${identity}`;
 const storage = levelup(leveldown(DB_PATH));
 
@@ -25,41 +27,30 @@ const node = kad({
   identity: identity
 });
 
-//kad-base node properties
-const seed = [
-  'd37db5836b773a39323d7b75b057477674717b66',
-  { hostname: '10.129.57.195', port: 8080 }
-];
-
-console.log(`Node with identity: ${identity}`);
-
-// Use rule "extensions" from other packages to add additional functionality
-// using plugins. Plugins can also extend the `Node` object with additional
-// methods
 node.plugin(quasar);
 
-node.use((request, response, next) => {
-  let [identityString] = request.contact;
-  console.log('MESSAGE from: ', identityString);
+node.use((req, res, next) => {
+  const [identityString] = req.contact;
+  logger.log('MESSAGE from: ', identityString);
   next();
 });
 
-node.use('STORE', (request, response, next) => {
-  console.log('***STORE message...***');
+node.use('STORE', (req, res, next) => {
+  logger.log('***STORE message...***');
 });
 
-node.use('ECHO', (request, response, next) => {
-  console.log('***ECHO message...***');
+node.use('ECHO', (req, res, next) => {
+  logger.log('***ECHO message...***');
 });
 
 node.listen(PORT);
 
+const seed = Seed.getBase();
 node.join(seed, () => {
-  console.log(`Connected to ${node.router.size} peers!`);
+  logger.log(`Connected to ${node.router.size} peers!`);
 
   node.quasarSubscribe('topic string', (content) => {
-    //check if value already exists, otherwise store it
-    console.log(content);
+    logger.log(content);
   });
 
   node.quasarPublish('topic string', {

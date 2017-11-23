@@ -8,6 +8,8 @@ const quasar = require('kad-quasar');
 const transport = new kad.HTTPTransport();
 const identity = 'd37db5836b773a39323d7b75b057477674717b66';
 
+const logger = require('./config/logger')(`node-[${identity}]`);
+
 const DB_PATH = `../.ass-db-q-${identity}`;
 const storage = levelup(leveldown(DB_PATH));
 
@@ -27,18 +29,18 @@ const node = kad({
 
 node.plugin(quasar);
 
-node.use((request, response, next) => {
-  let [identityString] = request.contact;
-  console.log('MESSAGE from: ', identityString);
+node.use((req, res, next) => {
+  let [identityString] = req.contact;
+  logger.log('MESSAGE from: ', identityString);
   next();
 });
 
-node.use('STORE', (request, response, next) => {
-  console.log('***STORE message...***');
+node.use('STORE', (req, res, next) => {
+  logger.log('***STORE message...***');
 });
 
-node.use('ECHO', (request, response, next) => {
-  console.log('***ECHO message...***');
+node.use('ECHO', (req, res, next) => {
+  logger.log('***ECHO message...***');
 });
 
 node.listen(PORT);
